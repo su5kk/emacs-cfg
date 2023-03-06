@@ -1,0 +1,5 @@
+* My vanilla emacs configuration
+
+Trying to learn tinker Emacs to my liking. I tried Doom Emacs and it was great.
+However, I prefer to have my own configuration, even when it's messy.
+I will try to rewrite it as a Literate code sooner or later so it can actually become readable.
