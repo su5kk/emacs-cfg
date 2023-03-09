@@ -2,7 +2,7 @@
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el
 
 * Fundamental settings
-
+** Default nonsense
 #+begin_src emacs-lisp
   ;; You will most likely need to adjust this font size for your system!
   (defvar tichkmacs/default-font-size 170)
@@ -22,7 +22,9 @@
   (add-to-list 'default-frame-alist '(font . "JetBrainsMono NF"))
   ;; Make ESC quit prompts
   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
+#+end_src
+** Fix fonts and fonts for org-mode for emacs daemon.
+#+begin_src emacs-lisp
   ;; Fix daemon fonts
   (defun custo/setup-font-faces ()
       ;; Setup font.
@@ -111,47 +113,41 @@
   (require 'straight-x)
 #+end_src
 * UI
-- Sets up fonts
-- Removes UI clutter.
-
+** Default settings
 #+begin_src emacs-lisp
-      (setq inhibit-startup-message t)
+(setq inhibit-startup-message t)
 
-      (column-number-mode)
-      (global-display-line-numbers-mode t)
+(column-number-mode)
+(global-display-line-numbers-mode t)
 
-      (scroll-bar-mode -1)        ; Disable visible scrollbar
-      (tool-bar-mode -1)          ; Disable the toolbar
-      (tooltip-mode -1)           ; Disable tooltips
-      (set-fringe-mode 10)        ; Give some breathing room
+(scroll-bar-mode -1)        ; Disable visible scrollbar
+(tool-bar-mode -1)          ; Disable the toolbar
+(tooltip-mode -1)           ; Disable tooltips
+(set-fringe-mode 10)        ; Give some breathing room
 
-      (menu-bar-mode -1)            ; Disable the menu bar
+(menu-bar-mode -1)            ; Disable the menu bar
 
-      ;; Set up the visible bell
-      (setq visible-bell nil)
+;; Set up the visible bell
+(setq visible-bell nil)
 
-      ;; Silence compiler warnings as they can be pretty disruptive
-      (setq comp-async-report-warnings-errors nil)
+;; Silence compiler warnings as they can be pretty disruptive
+(setq comp-async-report-warnings-errors nil)
 
-      ;; Setup font.
-      (set-face-attribute 'default nil :font "Iosevka SS04" :height tichkmacs/default-font-size)
-      ;; Set the fixed pitch face
-      (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono NF" :height 150 :weight 'light)
-      ;; Set the variable pitch face
-      (set-face-attribute 'variable-pitch nil :font "Iosevka Aile" :height 180 :weight 'regular)
-    ;; Disable line numbers for some modes
-    (dolist (mode '(org-mode-hook
-                    term-mode-hook
-                    shell-mode-hook
-                    eshell-mode-hook))
-      (add-hook mode (lambda () (display-line-numbers-mode 0))))
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+#+end_src
 
+** Doom stuff and delimiters.
+#+begin_src emacs-lisp
   ;; NOTE: The first time you load your configuration on a new machine, you'll
   ;; need to run the following command interactively so that mode line icons
   ;; display correctly:
   ;;
   ;; M-x all-the-icons-install-fonts
-
   (use-package all-the-icons)
 
   (use-package doom-modeline
@@ -161,7 +157,7 @@
     (doom-modeline-lsp t))
 
   (use-package doom-themes
-    :init (load-theme 'doom-dracula t))
+    :init (load-theme 'doom-gruvbox t))
 
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
@@ -332,7 +328,8 @@ This package *supposedly* shows better describes.
   ;; NOTE: Set this to the folder where you keep your Git repos!
   ;;(when (file-directory-p "~/Projects/Code")
   ;;  (setq projectile-project-search-path '("~/Projects/Code")))
-  (setq projectile-switch-project-action #'projectile-dired))
+  (setq projectile-switch-project-action #'projectile-dired)
+  (setq projectile-enable-caching t))
 
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
@@ -354,99 +351,137 @@ This package *supposedly* shows better describes.
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 #+end_src
 * IDE
-
 Install languages, lsp-mode, tree-sitter and folding.
-
+** Go
 #+begin_src emacs-lisp
-;; Go support
-(use-package go-mode
-  :ensure t
-  :config
-  (defun my/go-mode-setup ()
-    "Basic Go mode setup."
-  (add-hook 'before-save-hook #'lsp-format-buffer t t)
-  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+    ;; Go support
+    (use-package go-mode
+      :ensure t
+      :config
+      (defun my/go-mode-setup ()
+        "Basic Go mode setup."
+      (add-hook 'before-save-hook #'lsp-format-buffer t t)
+      (add-hook 'before-save-hook #'lsp-organize-imports t t))
 
-  (add-hook 'go-mode-hook #'my/go-mode-setup))
-
-;; Rust
-(use-package rust-mode
-  :mode "\\.rs\\'"
-  :init (setq rust-format-on-save t))
-
-(use-package cargo
-  :straight t
-  :defer t)
-
-;; LSP
-(use-package lsp-mode
-  :straight t
-  :commands (lsp lsp-mode lsp-deferred)
-  :hook ((go-mode rust-mode) . lsp-deferred)
-  :config
-  (setq lsp-prefer-flymake nil
-        lsp-enable-on-type-formatting nil
-        lsp-rust-server 'rust-analyzer
-        lsp-signature-render-documentation nil)
-  ;; for filling args placeholders upon function completion candidate selection
-  ;; lsp-enable-snippet and company-lsp-enable-snippet should be nil with
-  ;; yas-minor-mode is enabled: https://emacs.stackexchange.com/q/53104
-  (lsp-modeline-code-actions-mode)
-  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  (add-to-list 'lsp-file-watch-ignored "\\.vscode\\'")
-  :custom (lsp-headerline-breadcrumb-enable nil))
-
-
-(rune/leader-keys
-  "l"  '(:ignore t :which-key "lsp")
-  "ld" '(lsp-find-definition :which-key "definitions")
-  "lr" '(lsp-find-references :which-key "references")
-  "ln" 'lsp-ui-find-next-reference
-  "lp" 'lsp-ui-find-prev-reference
-  "lK" 'lsp-ui-doc-show
-  "ls" 'counsel-imenu
-  "le" '(lsp-ui-flycheck-list :which-key "diagnostics")
-  "lS" 'lsp-ui-sideline-mode
-  "lX" 'lsp-execute-code-action)
-
-(use-package lsp-ui
-  :straight t
-  :hook (lsp-mode . lsp-ui-mode)
-  :config
-  (setq lsp-ui-sideline-enable t)
-  (setq lsp-ui-peek-always-show t)
-  (setq lsp-ui-sideline-show-hover nil)
-  (setq lsp-ui-doc-position 'bottom)
-  (setq lsp-ui-doc-show-with-cursor nil))
-
-(use-package company
-  :config
-  (setq company-idle-delay 0.3)
-  (global-company-mode 1))
-
-;; tree-sitter for syntax highlight
-(use-package tree-sitter
-  :defer t
-  :config
-  (require 'tree-sitter-langs)
-  ;; This makes every node a link to a section of code
-  (setq tree-sitter-debug-jump-buttons t
-        ;; and this highlights the entire sub tree in your code
-        tree-sitter-debug-highlight-jump-region t))
-(global-tree-sitter-mode)
-(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-
-
-;; Grammar checks
-(use-package flycheck
-  :defer t
-  :hook (lsp-mode . flycheck-mode))
-(use-package smartparens
-  :hook (prog-mode . smartparens-mode))
-(use-package origami
-  :hook ((go-mode rust-mode yaml-mode) . origami-mode))
+      (add-hook 'go-mode-hook #'my/go-mode-setup))
 #+end_src
 
+** Rust
+#+begin_src emacs-lisp
+    ;; Rust
+    (use-package rust-mode
+      :mode "\\.rs\\'"
+      :init (setq rust-format-on-save t))
+
+    (use-package cargo
+      :straight t
+      :defer t)
+#+end_src
+
+** LSP mode
+#+begin_src emacs-lisp
+  ;; LSP
+  (use-package lsp-mode
+    :straight t
+    :commands (lsp lsp-mode lsp-deferred)
+    :hook ((go-mode rust-mode) . lsp-deferred)
+    :config
+    (setq lsp-prefer-flymake nil
+          lsp-enable-on-type-formatting nil
+          lsp-rust-server 'rust-analyzer
+          lsp-signature-render-documentation nil)
+    ;; for filling args placeholders upon function completion candidate selection
+    ;; lsp-enable-snippet and company-lsp-enable-snippet should be nil with
+    ;; yas-minor-mode is enabled: https://emacs.stackexchange.com/q/53104
+    (lsp-modeline-code-actions-mode)
+    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+    (add-to-list 'lsp-file-watch-ignored "\\.vscode\\'")
+    :custom
+    (lsp-headerline-breadcrumb-enable nil)
+    (lsp-rust-analyzer-server-display-inlay-hints t)
+    (lsp-rust-analyzer-display-chaining-hints t)
+    (lsp-rust-analyzer-display-closure-return-type-hints t))
+
+
+  (rune/leader-keys
+    "l"  '(:ignore t :which-key "lsp")
+    "ld" '(lsp-find-definition :which-key "definitions")
+    "lr" '(lsp-find-references :which-key "references")
+    "ln" 'lsp-ui-find-next-reference
+    "lp" 'lsp-ui-find-prev-reference
+    "lK" 'lsp-ui-doc-show
+    "ls" 'counsel-imenu
+    "le" '(lsp-ui-flycheck-list :which-key "diagnostics")
+    "lS" 'lsp-ui-sideline-mode
+    "lX" 'lsp-execute-code-action)
+
+  (use-package lsp-ui
+    :straight t
+    :hook (lsp-mode . lsp-ui-mode)
+    :config
+    (setq lsp-ui-sideline-enable t)
+    (setq lsp-ui-peek-always-show t)
+    (setq lsp-ui-sideline-show-hover nil)
+    (setq lsp-ui-doc-position 'bottom)
+    (setq lsp-ui-doc-show-with-cursor nil))
+  (use-package lsp-ivy)
+#+end_src
+** Grammar and autocompletion
+#+begin_src emacs-lisp
+  (use-package company
+    :config
+    (setq company-idle-delay 0.3)
+    (global-company-mode 1))
+  ;; UI enhancements for company.
+  (use-package company-box
+  :hook (company-mode . company-box-mode))
+
+  ;; tree-sitter for syntax highlight
+  (use-package tree-sitter
+    :defer t
+    :config
+    (require 'tree-sitter-langs)
+    ;; This makes every node a link to a section of code
+    (setq tree-sitter-debug-jump-buttons t
+          ;; and this highlights the entire sub tree in your code
+          tree-sitter-debug-highlight-jump-region t))
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+
+
+  ;; Grammar checks
+  (use-package flycheck
+    :defer t
+    :hook (lsp-mode . flycheck-mode))
+  (use-package smartparens
+    :hook (prog-mode . smartparens-mode))
+  (use-package origami
+    :hook ((go-mode rust-mode yaml-mode) . origami-mode))
+#+end_src
+** Debug
+#+begin_src emacs-lisp
+
+    (use-package dap-mode
+      :config
+     (dap-ui-mode 1)
+     ;; enables mouse hover support
+     (dap-tooltip-mode 1)
+     ;; use tooltips for mouse hover
+     ;; if it is not enabled `dap-mode' will use the minibuffer.
+     (tooltip-mode 1)
+     ;; displays floating panel with debug buttons
+     ;; requies emacs 26+
+     (dap-ui-controls-mode 1) 
+      (require 'dap-dlv-go)
+      (require 'dap-lldb)
+      (require 'dap-gdb-lldb)
+
+      ;; Bind `C-c l d` to `dap-hydra` for easy access
+      (general-define-key
+        :keymaps 'lsp-mode-map
+        :prefix lsp-keymap-prefix
+        "d" '(dap-hydra t :wk "debugger")))
+#+end_src
 * Org
 ** Org mode basic
 

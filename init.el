@@ -1,23 +1,23 @@
 ;; You will most likely need to adjust this font size for your system!
-  (defvar tichkmacs/default-font-size 170)
-  (setq backup-directory-alist '(("." . "~/emacs-backups")))
+(defvar tichkmacs/default-font-size 170)
+(setq backup-directory-alist '(("." . "~/emacs-backups")))
 
-  ;; The default is 800 kilobytes.  Measured in bytes.
-  (setq gc-cons-threshold (* 50 1000 1000))
+;; The default is 800 kilobytes.  Measured in bytes.
+(setq gc-cons-threshold (* 50 1000 1000))
 
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 2)
-  (setq-default evil-shift-width tab-width)
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 2)
+(setq-default evil-shift-width tab-width)
 
-  (define-key global-map (kbd "RET") 'newline-and-indent)
-  (set-default-coding-systems 'utf-8)
-  (add-to-list 'default-frame-alist '(font . "Iosevka SS04"))
-  (add-to-list 'default-frame-alist '(font . "Iosevka Aile"))
-  (add-to-list 'default-frame-alist '(font . "JetBrainsMono NF"))
-  ;; Make ESC quit prompts
-  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+(define-key global-map (kbd "RET") 'newline-and-indent)
+(set-default-coding-systems 'utf-8)
+(add-to-list 'default-frame-alist '(font . "Iosevka SS04"))
+(add-to-list 'default-frame-alist '(font . "Iosevka Aile"))
+(add-to-list 'default-frame-alist '(font . "JetBrainsMono NF"))
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-  ;; Fix daemon fonts
+;; Fix daemon fonts
   (defun custo/setup-font-faces ()
       ;; Setup font.
       (set-face-attribute 'default nil :font "Iosevka SS04" :height tichkmacs/default-font-size)
@@ -99,41 +99,34 @@
 
 (setq inhibit-startup-message t)
 
-    (column-number-mode)
-    (global-display-line-numbers-mode t)
+(column-number-mode)
+(global-display-line-numbers-mode t)
 
-    (scroll-bar-mode -1)        ; Disable visible scrollbar
-    (tool-bar-mode -1)          ; Disable the toolbar
-    (tooltip-mode -1)           ; Disable tooltips
-    (set-fringe-mode 10)        ; Give some breathing room
+(scroll-bar-mode -1)        ; Disable visible scrollbar
+(tool-bar-mode -1)          ; Disable the toolbar
+(tooltip-mode -1)           ; Disable tooltips
+(set-fringe-mode 10)        ; Give some breathing room
 
-    (menu-bar-mode -1)            ; Disable the menu bar
+(menu-bar-mode -1)            ; Disable the menu bar
 
-    ;; Set up the visible bell
-    (setq visible-bell nil)
+;; Set up the visible bell
+(setq visible-bell nil)
 
-    ;; Silence compiler warnings as they can be pretty disruptive
-    (setq comp-async-report-warnings-errors nil)
+;; Silence compiler warnings as they can be pretty disruptive
+(setq comp-async-report-warnings-errors nil)
 
-    ;; Setup font.
-    (set-face-attribute 'default nil :font "Iosevka SS04" :height tichkmacs/default-font-size)
-    ;; Set the fixed pitch face
-    (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono NF" :height 150 :weight 'light)
-    ;; Set the variable pitch face
-    (set-face-attribute 'variable-pitch nil :font "Iosevka Aile" :height 180 :weight 'regular)
-  ;; Disable line numbers for some modes
-  (dolist (mode '(org-mode-hook
-                  term-mode-hook
-                  shell-mode-hook
-                  eshell-mode-hook))
-    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 ;; NOTE: The first time you load your configuration on a new machine, you'll
 ;; need to run the following command interactively so that mode line icons
 ;; display correctly:
 ;;
 ;; M-x all-the-icons-install-fonts
-
 (use-package all-the-icons)
 
 (use-package doom-modeline
@@ -143,7 +136,7 @@
   (doom-modeline-lsp t))
 
 (use-package doom-themes
-  :init (load-theme 'doom-dracula t))
+  :init (load-theme 'doom-gruvbox t))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -288,7 +281,8 @@
   ;; NOTE: Set this to the folder where you keep your Git repos!
   ;;(when (file-directory-p "~/Projects/Code")
   ;;  (setq projectile-project-search-path '("~/Projects/Code")))
-  (setq projectile-switch-project-action #'projectile-dired))
+  (setq projectile-switch-project-action #'projectile-dired)
+  (setq projectile-enable-caching t))
 
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
@@ -343,7 +337,11 @@
   (lsp-modeline-code-actions-mode)
   (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
   (add-to-list 'lsp-file-watch-ignored "\\.vscode\\'")
-  :custom (lsp-headerline-breadcrumb-enable nil))
+  :custom
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-rust-analyzer-server-display-inlay-hints t)
+  (lsp-rust-analyzer-display-chaining-hints t)
+  (lsp-rust-analyzer-display-closure-return-type-hints t))
 
 
 (rune/leader-keys
@@ -367,11 +365,15 @@
   (setq lsp-ui-sideline-show-hover nil)
   (setq lsp-ui-doc-position 'bottom)
   (setq lsp-ui-doc-show-with-cursor nil))
+(use-package lsp-ivy)
 
 (use-package company
   :config
   (setq company-idle-delay 0.3)
   (global-company-mode 1))
+;; UI enhancements for company.
+(use-package company-box
+:hook (company-mode . company-box-mode))
 
 ;; tree-sitter for syntax highlight
 (use-package tree-sitter
@@ -394,6 +396,27 @@
   :hook (prog-mode . smartparens-mode))
 (use-package origami
   :hook ((go-mode rust-mode yaml-mode) . origami-mode))
+
+(use-package dap-mode
+  :config
+ (dap-ui-mode 1)
+ ;; enables mouse hover support
+ (dap-tooltip-mode 1)
+ ;; use tooltips for mouse hover
+ ;; if it is not enabled `dap-mode' will use the minibuffer.
+ (tooltip-mode 1)
+ ;; displays floating panel with debug buttons
+ ;; requies emacs 26+
+ (dap-ui-controls-mode 1) 
+  (require 'dap-dlv-go)
+  (require 'dap-lldb)
+  (require 'dap-gdb-lldb)
+
+  ;; Bind `C-c l d` to `dap-hydra` for easy access
+  (general-define-key
+    :keymaps 'lsp-mode-map
+    :prefix lsp-keymap-prefix
+    "d" '(dap-hydra t :wk "debugger")))
 
 ;; Org mode
 (defun dw/org-mode-setup ()
